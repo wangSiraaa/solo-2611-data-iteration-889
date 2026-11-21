@@ -1,0 +1,66 @@
+{
+  "chapter": "ch",
+  "all_deterministic": false,
+  "claims": [
+    {
+      "claim_id": "ch:甲组:F->C",
+      "from_group": "F",
+      "to_group": "C",
+      "desk_id": "甲组"
+    },
+    {
+      "claim_id": "ch:甲组:F->Q",
+      "from_group": "F",
+      "to_group": "Q",
+      "desk_id": "甲组"
+    }
+  ],
+  "groups": [
+    {
+      "group_id": "F",
+      "usable": true,
+      "deterministic": true,
+      "print": "卷甲全称：3",
+      "order": null,
+      "witnesses": []
+    },
+    {
+      "group_id": "Q",
+      "usable": true,
+      "deterministic": true,
+      "print": "卷甲：3",
+      "order": null,
+      "witnesses": []
+    },
+    {
+      "group_id": "C",
+      "usable": true,
+      "deterministic": false,
+      "print": null,
+      "order": null,
+      "witnesses": [
+        {
+          "order": [
+            "F",
+            "C",
+            "Q"
+          ],
+          "render": "同上"
+        },
+        {
+          "order": [
+            "F",
+            "Q",
+            "C"
+          ],
+          "render": "卷甲：3"
+        }
+      ]
+    }
+  ],
+  "lines": [
+    "F: 卷甲全称：3  [可制版]",
+    "Q: 卷甲：3  [可制版]",
+    "C: 不确定；['F', 'C', 'Q'] -> 同上, ['F', 'Q', 'C'] -> 卷甲：3"
+  ]
+}

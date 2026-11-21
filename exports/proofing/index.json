@@ -1,0 +1,60 @@
+{
+  "exports_root": "exports/proofing",
+  "steps": [
+    {
+      "step": "00_before_correction",
+      "title": "Q/C 无签关系；C 待定",
+      "dir": "exports/proofing/00_before_correction"
+    },
+    {
+      "step": "01_corrected_binding",
+      "title": "把 Q 改绑 p；C 始终 同上",
+      "dir": "exports/proofing/01_corrected_binding"
+    },
+    {
+      "step": "01b_correction_trail",
+      "title": "更正指到原绑定，旧绑定保留",
+      "dir": "exports/proofing/01b_correction_trail"
+    },
+    {
+      "step": "02_signed_q_before_c",
+      "title": "恢复旧绑定 + 补签 Q<C；C 始终短名",
+      "dir": "exports/proofing/02_signed_q_before_c"
+    },
+    {
+      "step": "03_handover",
+      "title": "送印批次（固定内容）",
+      "dir": "exports/proofing/03_handover"
+    },
+    {
+      "step": "04_offline_reopen",
+      "title": "断网重开旧包，结果一致",
+      "dir": "exports/proofing/04_offline_reopen"
+    },
+    {
+      "step": "05_after_live_change",
+      "title": "送印后改动只影响现行版，旧批次不变",
+      "dir": "exports/proofing/05_after_live_change"
+    },
+    {
+      "step": "06_duplicate_retraction",
+      "title": "同一条关系两台各签，撤回甲台，乙台继续生效",
+      "dir": "exports/proofing/06_duplicate_retraction"
+    },
+    {
+      "step": "07_range_endpoint",
+      "title": "范围端停用 -> 组待核；相邻关系被打断",
+      "dir": "exports/proofing/07_range_endpoint"
+    },
+    {
+      "step": "08_short_collision",
+      "title": "短名重名 -> 该卷一律印全称",
+      "dir": "exports/proofing/08_short_collision"
+    },
+    {
+      "step": "09_legacy_export",
+      "title": "旧 citation-product/1 导出逐字节不变",
+      "dir": "exports/proofing/09_legacy_export"
+    }
+  ]
+}

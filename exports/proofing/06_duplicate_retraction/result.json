@@ -1,0 +1,27 @@
+{
+  "claims_before": [
+    [
+      "ch:乙组:A->B",
+      "乙组"
+    ],
+    [
+      "ch:甲组:A->B",
+      "甲组"
+    ]
+  ],
+  "active_after": [
+    {
+      "claim_id": "ch:乙组:A->B",
+      "desk_id": "乙组"
+    }
+  ],
+  "before_lines": [
+    "A: W 全称：1  [可制版]",
+    "B: W：2  [可制版]"
+  ],
+  "after_lines": [
+    "A: W 全称：1  [可制版]",
+    "B: W：2  [可制版]"
+  ],
+  "B_form_kept": true
+}

@@ -1,0 +1,11 @@
+{
+  "summary": {
+    "catalog_revision": 1,
+    "usable": 2,
+    "needs_attention": 0,
+    "total": 2,
+    "usable_path": "/workspace/exports/proofing/09_legacy_export/usable.jsonl",
+    "needs_attention_path": "/workspace/exports/proofing/09_legacy_export/needs_attention.jsonl"
+  },
+  "byte_identical": true
+}

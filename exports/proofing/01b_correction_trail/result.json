@@ -1,0 +1,12 @@
+[
+  {
+    "correction_id": "corr-excerpt:Q:0:Q->C",
+    "group_id": "Q",
+    "seq": 0,
+    "old_citation_id": "Q",
+    "new_citation_id": "C",
+    "desk_id": "乙组",
+    "reason": "Q 应绑正文 p",
+    "created_revision": 1
+  }
+]

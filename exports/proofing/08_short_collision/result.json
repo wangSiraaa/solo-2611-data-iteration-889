@@ -1,0 +1,48 @@
+{
+  "names": {
+    "W": {
+      "full": "W 全称",
+      "short": "W"
+    },
+    "X": {
+      "full": "X 全称",
+      "short": "W"
+    }
+  },
+  "Z": {
+    "form": "full_name",
+    "render": "X 全称：9",
+    "entries": [
+      {
+        "volume_id": "X",
+        "page_id": "z",
+        "section_id": "body",
+        "label": "9",
+        "name": "X 全称",
+        "name_kind": "full"
+      }
+    ]
+  },
+  "R": {
+    "form": "full_name",
+    "render": "W 全称：2,3",
+    "entries": [
+      {
+        "volume_id": "W",
+        "page_id": "b",
+        "section_id": "body",
+        "label": "2",
+        "name": "W 全称",
+        "name_kind": "full"
+      },
+      {
+        "volume_id": "W",
+        "page_id": "c",
+        "section_id": "body",
+        "label": "3",
+        "name": "W 全称",
+        "name_kind": "full"
+      }
+    ]
+  }
+}

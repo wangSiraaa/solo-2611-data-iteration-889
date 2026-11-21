@@ -93,6 +93,107 @@ CREATE TABLE IF NOT EXISTS operation_log (
 );
 """
 
+# Proof / print pre-review schema.  Kept separate so it can be created on
+# databases that were already built by earlier versions (``ensure_proof_schema``).
+PROOF_SCHEMA = """
+-- A volume has two independent printing names, owned by the print shop.
+CREATE TABLE IF NOT EXISTS volume_names (
+    volume_id  TEXT PRIMARY KEY,
+    full_name  TEXT NOT NULL,
+    short_name TEXT NOT NULL
+);
+
+-- A chapter opens empty and never inherits groups from another chapter.
+CREATE TABLE IF NOT EXISTS proof_chapters (
+    chapter_id    TEXT PRIMARY KEY,
+    chapter_order INTEGER NOT NULL UNIQUE,
+    title         TEXT,
+    created_revision INTEGER
+);
+
+-- A stable footnote group belongs to exactly one chapter.  ``position`` is the
+-- discovery order (first appearance) used for grouping and reporting only; it
+-- is never a total order imposed by the editor.
+CREATE TABLE IF NOT EXISTS proof_groups (
+    group_id      TEXT PRIMARY KEY,
+    chapter_id    TEXT NOT NULL REFERENCES proof_chapters(chapter_id),
+    position      INTEGER NOT NULL,
+    created_revision INTEGER,
+    UNIQUE (chapter_id, position)
+);
+
+-- An excerpt is a fixed reference (PINNED / RANGE) already stored in
+-- ``citations``.  A group contains a de-duplicated sequence of excerpts in
+-- first-appearance order of their complete (volume, stable page) sequence.
+CREATE TABLE IF NOT EXISTS proof_excerpts (
+    group_id    TEXT NOT NULL REFERENCES proof_groups(group_id),
+    seq         INTEGER NOT NULL,
+    citation_id TEXT NOT NULL REFERENCES citations(citation_id),
+    PRIMARY KEY (group_id, seq)
+);
+
+-- A signed ordering claim: "from_group must print before to_group" inside one
+-- chapter.  The same pair may be claimed independently by several desks; each
+-- desk's claim is its own row and can be retracted on its own.
+CREATE TABLE IF NOT EXISTS proof_claims (
+    claim_id     TEXT PRIMARY KEY,
+    chapter_id   TEXT NOT NULL REFERENCES proof_chapters(chapter_id),
+    from_group   TEXT NOT NULL REFERENCES proof_groups(group_id),
+    to_group     TEXT NOT NULL REFERENCES proof_groups(group_id),
+    desk_id      TEXT NOT NULL,
+    status       TEXT NOT NULL CHECK (status IN ('active','retracted')),
+    retracted_at TEXT,
+    created_revision INTEGER
+);
+
+-- One desk may not hold the same relation twice *at the same time*; after it
+-- retracts, it may sign the relation again (a later correction often does).
+CREATE UNIQUE INDEX IF NOT EXISTS proof_claims_active_unique
+    ON proof_claims (chapter_id, from_group, to_group, desk_id)
+    WHERE status = 'active';
+
+-- A correction replaces a prior claim's binding.  It must point at the claim
+-- it corrects; the old claim is retracted and a new claim is created.
+CREATE TABLE IF NOT EXISTS proof_corrections (
+    correction_id TEXT PRIMARY KEY,
+    claim_id      TEXT NOT NULL REFERENCES proof_claims(claim_id),
+    new_claim_id  TEXT NOT NULL REFERENCES proof_claims(claim_id),
+    desk_id       TEXT NOT NULL,
+    reason        TEXT,
+    created_revision INTEGER
+);
+
+-- Proof-layer correction of an excerpt's binding.  The original catalog
+-- citation is never touched; only the group points at a different, already
+-- existing fixed reference.
+CREATE TABLE IF NOT EXISTS proof_excerpt_corrections (
+    correction_id   TEXT PRIMARY KEY,
+    group_id        TEXT NOT NULL REFERENCES proof_groups(group_id),
+    seq             INTEGER NOT NULL,
+    old_citation_id TEXT NOT NULL,
+    new_citation_id TEXT NOT NULL,
+    desk_id         TEXT NOT NULL,
+    reason          TEXT,
+    created_revision INTEGER
+);
+
+-- Issued handover batches are immutable.  Content is the serialised chapter
+-- snapshot at issue time; re-opening never rewrites it.
+CREATE TABLE IF NOT EXISTS proof_handover_batches (
+    batch_id          TEXT PRIMARY KEY,
+    catalog_revision  INTEGER NOT NULL,
+    issued_at         TEXT NOT NULL,
+    content_json      TEXT NOT NULL
+);
+"""
+
+
+def ensure_proof_schema(conn: sqlite3.Connection) -> None:
+    """Create the proof schema if absent (safe on existing databases)."""
+
+    conn.executescript(PROOF_SCHEMA)
+
+
 
 def connect(path: str | Path) -> sqlite3.Connection:
     """Open a connection in autocommit mode; transactions are explicit."""
@@ -149,6 +250,16 @@ def next_citation_position(conn: sqlite3.Connection) -> int:
     return value
 
 
+def proof_revision(conn: sqlite3.Connection) -> int:
+    return int(get_meta(conn, "proof_revision", "0") or 0)
+
+
+def bump_proof_revision(conn: sqlite3.Connection) -> int:
+    revision = proof_revision(conn) + 1
+    set_meta(conn, "proof_revision", str(revision))
+    return revision
+
+
 @contextmanager
 def write_transaction(conn: sqlite3.Connection) -> Iterator[None]:
     """An immediate write transaction, committed only when the block returns."""
@@ -184,6 +295,14 @@ def clear_all(conn: sqlite3.Connection) -> None:
 
     with write_transaction(conn):
         for table in (
+            "proof_excerpt_corrections",
+            "proof_corrections",
+            "proof_claims",
+            "proof_excerpts",
+            "proof_groups",
+            "proof_chapters",
+            "proof_handover_batches",
+            "volume_names",
             "operation_log",
             "pinned_members",
             "range_endpoints",

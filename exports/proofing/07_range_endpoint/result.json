@@ -1,0 +1,43 @@
+{
+  "before": {
+    "A": [
+      true,
+      [
+        "full_name"
+      ]
+    ],
+    "B": [
+      true,
+      [
+        "short_name"
+      ]
+    ],
+    "R": [
+      true,
+      [
+        "short_name"
+      ]
+    ]
+  },
+  "after": {
+    "A": [
+      true,
+      [
+        "full_name"
+      ]
+    ],
+    "B": [
+      true,
+      [
+        "short_name"
+      ]
+    ],
+    "R": [
+      false,
+      [
+        "pending"
+      ]
+    ]
+  },
+  "range_group_after": "待核"
+}

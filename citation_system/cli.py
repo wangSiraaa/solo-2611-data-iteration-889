@@ -26,6 +26,7 @@ from typing import Any
 
 from . import export
 from .catalog import Catalog
+from .proof import ProofDesk, open_handover_bundle
 from .repository import CitationRepository
 
 
@@ -245,6 +246,160 @@ def _error_dict(exc: BaseException) -> dict[str, Any]:
     return {"code": exc.__class__.__name__, "message": str(exc)}
 
 
+# ----------------------------------------------------------------------
+# proof / handover commands
+# ----------------------------------------------------------------------
+def cmd_volume_names(args: argparse.Namespace) -> int:
+    catalog = _open_existing(args.db)
+    try:
+        desk = ProofDesk(catalog.conn)
+        if args.volume and args.full_name is not None and args.short_name is not None:
+            desk.set_volume_names(args.volume, args.full_name, args.short_name)
+        names = desk.volume_names()
+        out = {
+            vid: {"full_name": n.full_name, "short_name": n.short_name}
+            for vid, n in sorted(names.items())
+        }
+    finally:
+        catalog.close()
+    print(json.dumps(out, ensure_ascii=False, indent=2))
+    return 0
+
+
+def cmd_create_chapter(args: argparse.Namespace) -> int:
+    catalog = _open_existing(args.db)
+    try:
+        chapter = ProofDesk(catalog.conn).create_chapter(args.chapter_id, args.title)
+    finally:
+        catalog.close()
+    print(json.dumps(
+        {"chapter_id": chapter.chapter_id, "chapter_order": chapter.chapter_order,
+         "title": chapter.title}, ensure_ascii=False))
+    return 0
+
+
+def cmd_add_group(args: argparse.Namespace) -> int:
+    catalog = _open_existing(args.db)
+    try:
+        record = ProofDesk(catalog.conn).add_group(
+            args.chapter_id, args.group_id, args.excerpt
+        )
+    finally:
+        catalog.close()
+    print(json.dumps(
+        {"group_id": record.group_id, "chapter_id": record.chapter_id,
+         "position": record.position}, ensure_ascii=False))
+    return 0
+
+
+def cmd_submit_claim(args: argparse.Namespace) -> int:
+    catalog = _open_existing(args.db)
+    try:
+        claim = ProofDesk(catalog.conn).submit_claim(
+            args.chapter_id, args.before, args.after, args.desk,
+            claim_id=args.claim_id,
+        )
+    finally:
+        catalog.close()
+    print(json.dumps(
+        {"claim_id": claim.claim_id, "chapter_id": claim.chapter_id,
+         "from_group": claim.from_group, "to_group": claim.to_group,
+         "desk_id": claim.desk_id, "status": claim.status}, ensure_ascii=False))
+    return 0
+
+
+def cmd_retract_claim(args: argparse.Namespace) -> int:
+    catalog = _open_existing(args.db)
+    try:
+        claim = ProofDesk(catalog.conn).retract_claim(args.claim_id)
+    finally:
+        catalog.close()
+    print(json.dumps(
+        {"claim_id": claim.claim_id, "status": claim.status,
+         "from_group": claim.from_group, "to_group": claim.to_group},
+        ensure_ascii=False))
+    return 0
+
+
+def cmd_correct_claims(args: argparse.Namespace) -> int:
+    catalog = _open_existing(args.db)
+    try:
+        corrections = _read_json(args.corrections)
+        if isinstance(corrections, dict):
+            corrections = corrections.get("corrections", [corrections])
+        claims = ProofDesk(catalog.conn).apply_corrections(corrections)
+    finally:
+        catalog.close()
+    print(json.dumps(
+        {"corrections": [
+            {"claim_id": c.claim_id, "chapter_id": c.chapter_id,
+             "from_group": c.from_group, "to_group": c.to_group, "status": c.status}
+            for c in claims
+        ]}, ensure_ascii=False))
+    return 0
+
+
+def cmd_correct_excerpt(args: argparse.Namespace) -> int:
+    catalog = _open_existing(args.db)
+    try:
+        result = ProofDesk(catalog.conn).correct_excerpt(
+            args.group_id, args.seq, args.citation_id, args.desk,
+            correction_id=args.correction_id,
+        )
+    finally:
+        catalog.close()
+    print(json.dumps(result, ensure_ascii=False))
+    return 0
+
+
+def cmd_prereview(args: argparse.Namespace) -> int:
+    catalog = _open_existing(args.db)
+    try:
+        report = ProofDesk(catalog.conn).chapter_report(args.chapter_id)
+    finally:
+        catalog.close()
+    print(json.dumps(report, ensure_ascii=False, indent=2))
+    return 0
+
+
+def cmd_issue_handover(args: argparse.Namespace) -> int:
+    catalog = _open_existing(args.db)
+    try:
+        payload = ProofDesk(catalog.conn).issue_handover(args.chapter_id, args.batch_id)
+    finally:
+        catalog.close()
+    if args.out:
+        out = Path(args.out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+    print(json.dumps(
+        {"batch_id": payload["batch_id"],
+         "catalog_revision": payload["catalog_revision"],
+         "groups": len(payload["groups"]),
+         "out": args.out}, ensure_ascii=False))
+    return 0
+
+
+def cmd_reopen_handover(args: argparse.Namespace) -> int:
+    payload = _read_json(args.bundle)
+    analysis = open_handover_bundle(payload)
+    report = analysis.to_dict()
+    print(json.dumps(report, ensure_ascii=False, indent=2))
+    return 0
+
+
+def cmd_list_handovers(args: argparse.Namespace) -> int:
+    catalog = _open_existing(args.db)
+    try:
+        batches = ProofDesk(catalog.conn).handover_batches()
+    finally:
+        catalog.close()
+    print(json.dumps(batches, ensure_ascii=False, indent=2))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="citation_system")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -292,6 +447,76 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--volume", dest="volume_id", required=True)
     p.add_argument("--page", dest="page_id", required=True)
     p.set_defaults(func=cmd_referrers)
+
+    # ---- proof / handover flow ----------------------------------------
+    p = sub.add_parser("volume-names", help="set or list printer volume names")
+    p.add_argument("--db", required=True)
+    p.add_argument("--volume")
+    p.add_argument("--full-name", dest="full_name")
+    p.add_argument("--short-name", dest="short_name")
+    p.set_defaults(func=cmd_volume_names)
+
+    p = sub.add_parser("create-chapter", help="open an empty proof chapter")
+    p.add_argument("--db", required=True)
+    p.add_argument("--chapter-id", dest="chapter_id", required=True)
+    p.add_argument("--title")
+    p.set_defaults(func=cmd_create_chapter)
+
+    p = sub.add_parser("add-group", help="add a stable footnote group")
+    p.add_argument("--db", required=True)
+    p.add_argument("--chapter-id", dest="chapter_id", required=True)
+    p.add_argument("--group-id", dest="group_id", required=True)
+    p.add_argument("--excerpt", action="append", required=True,
+                   help="existing citation_id (repeatable, in order)")
+    p.set_defaults(func=cmd_add_group)
+
+    p = sub.add_parser("submit-claim", help="sign 'before prints before after'")
+    p.add_argument("--db", required=True)
+    p.add_argument("--chapter-id", dest="chapter_id", required=True)
+    p.add_argument("--before", required=True, dest="before")
+    p.add_argument("--after", required=True, dest="after")
+    p.add_argument("--desk", required=True)
+    p.add_argument("--claim-id", dest="claim_id")
+    p.set_defaults(func=cmd_submit_claim)
+
+    p = sub.add_parser("retract-claim", help="retract one desk's signed relation")
+    p.add_argument("--db", required=True)
+    p.add_argument("claim_id")
+    p.set_defaults(func=cmd_retract_claim)
+
+    p = sub.add_parser("correct-claims", help="apply a JSON correction batch atomically")
+    p.add_argument("--db", required=True)
+    p.add_argument("--corrections", required=True)
+    p.set_defaults(func=cmd_correct_claims)
+
+    p = sub.add_parser("correct-excerpt", help="repoint one excerpt binding")
+    p.add_argument("--db", required=True)
+    p.add_argument("--group-id", dest="group_id", required=True)
+    p.add_argument("--seq", type=int, required=True)
+    p.add_argument("--citation-id", dest="citation_id", required=True)
+    p.add_argument("--desk", required=True)
+    p.add_argument("--correction-id", dest="correction_id")
+    p.set_defaults(func=cmd_correct_excerpt)
+
+    p = sub.add_parser("prereview", help="per-group print determinism for a chapter")
+    p.add_argument("--db", required=True)
+    p.add_argument("--chapter-id", dest="chapter_id", required=True)
+    p.set_defaults(func=cmd_prereview)
+
+    p = sub.add_parser("issue-handover", help="issue an immutable handover batch")
+    p.add_argument("--db", required=True)
+    p.add_argument("--chapter-id", dest="chapter_id", required=True)
+    p.add_argument("--batch-id", dest="batch_id", required=True)
+    p.add_argument("--out")
+    p.set_defaults(func=cmd_issue_handover)
+
+    p = sub.add_parser("reopen-handover", help="re-review a batch offline (no DB)")
+    p.add_argument("bundle")
+    p.set_defaults(func=cmd_reopen_handover)
+
+    p = sub.add_parser("list-handovers", help="list issued handover batches")
+    p.add_argument("--db", required=True)
+    p.set_defaults(func=cmd_list_handovers)
     return parser
 
 

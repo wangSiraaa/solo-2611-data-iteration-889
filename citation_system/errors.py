@@ -54,6 +54,22 @@ INVALID_CITATION = "invalid_citation"
 DUPLICATE_PINNED_MEMBER = "duplicate_pinned_member"
 CROSS_VOLUME_REFERENCE = "cross_volume_reference"
 
+# Group composition / ordering / print pre-review errors
+VOLUME_NAME_INVALID = "volume_name_invalid"
+CHAPTER_EXISTS = "chapter_exists"
+CHAPTER_NOT_FOUND = "chapter_not_found"
+GROUP_NOT_FOUND = "group_not_found"
+INVALID_GROUP = "invalid_group"
+INVALID_CLAIM = "invalid_claim"
+CLAIM_NOT_FOUND = "claim_not_found"
+CLAIM_ALREADY_RETRACTED = "claim_already_retracted"
+DUPLICATE_CLAIM = "duplicate_claim"
+INVALID_CORRECTION = "invalid_correction"
+ORDER_CYCLE = "order_cycle"
+MISSING_VOLUME_NAME = "missing_volume_name"
+BATCH_EXISTS = "batch_exists"
+HANDOVER_INVALID = "handover_invalid"
+
 
 class OperationRejected(CitationSystemError):
     """A whole operation request (batch) was rejected before any write."""

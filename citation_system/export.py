@@ -202,16 +202,21 @@ def _evaluate_range(snap: Snapshot, citation: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def evaluate_citation(snap: Snapshot, citation: dict[str, Any]) -> dict[str, Any]:
+    """Evaluate one citation against a snapshot (same rules as the export)."""
+
+    if citation["kind"] == PINNED:
+        return _evaluate_pinned(snap, citation)
+    if citation["kind"] == RANGE:
+        return _evaluate_range(snap, citation)
+    raise ValueError(f"unknown citation kind {citation['kind']!r}")
+
+
 def evaluate_snapshot(snap: Snapshot) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     usable: list[dict[str, Any]] = []
     attention: list[dict[str, Any]] = []
     for citation in snap.citations:
-        if citation["kind"] == PINNED:
-            product = _evaluate_pinned(snap, citation)
-        elif citation["kind"] == RANGE:
-            product = _evaluate_range(snap, citation)
-        else:  # pragma: no cover - schema constrains this
-            raise ValueError(f"unknown citation kind {citation['kind']!r}")
+        product = evaluate_citation(snap, citation)
         (usable if product["status"] == "usable" else attention).append(product)
     return usable, attention
 

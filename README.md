@@ -130,14 +130,55 @@ C_RANGE usable V1/p2,V1/p3,V1/p4 -
 ## 布局
 
 ```
-citation_system/   实现源码（catalog / repository / export / dependency / cli）
-tests/             52 个单元与集成测试（含随机不变量与目标规模）
+citation_system/   实现源码（catalog / repository / export / dependency / proof / cli）
+tests/             76 个单元与集成测试（含随机不变量、暴力枚举校验与目标规模）
 scripts/demo_726.py        端到端展示，逐步保留旧导出
+scripts/demo_proofing.py   组稿 / 预审 / 交印 / 离线重开演示
 scripts/benchmark_726.py   目标规模基准
 exports/scenario/  演示产生的各步骤导出（旧目录保留）
+exports/proofing/  交印流转演示的各步骤结果与交印包
 exports/cli_run/   按 materials 原始输入走完整 CLI 的导出
 work/              运行的 SQLite 数据库
 ```
+
+## 组稿与印词预审（`citation_system/proof.py`）
+
+在目录与引用仓之上新增独立的**交印流转**层；不改动 PINNED/RANGE、不改动
+`citation-product/1` 导出。旧库打开时会按需补建 `proof_*` 表
+（`ensure_proof_schema`），旧交印包可离线重开。
+
+- **卷名**：印厂独立保管每卷 `full_name` / `short_name`；短名相撞时该卷
+  一律用全称。
+- **章**：`create_chapter` 从空白开始，不继承其他章的任何组。
+- **组**：稳定脚注组属于一章，含一串既有摘录（`citation_id`）。求值时按
+  当前目录快照展开，按完整 `(卷, 稳定页)` **首次出现**去重。任一摘录待核则
+  整组待核。
+- **先后关系**：`submit_claim(chapter, before, after, desk)` 是某台的签署。
+  两台的同一关系是两行独立记录，撤回其一另一仍生效；同台同一时间不得重复
+  签同一条（撤回后可再签）。明文成环的签署当场拒绝并给出矛盾链。
+- **更正**：`correct_claim` / `apply_corrections` 必须指向原关系，原子地把
+  原关系置为撤回并建新关系；一批更正若成环，**整批拒绝**并返回一条实际
+  矛盾链（`details.cycle`，首尾相同）。`correct_excerpt` 改组内某摘录的绑定，
+  旧绑定保留在 `proof_excerpt_corrections` 里，原 catalog 引用不动。
+- **印词规则**（每章、每个具体次序）：待核组印 `待核`，打断紧邻的「同上」，
+  但其卷仍算出现过；可用组若紧邻前一可用组且实际卷页序列完全相同印 `同上`；
+  否则单卷、此前出现过且短名不撞车印短名加页；其余印全称加页。
+- **预审**：`chapter_report` / `prereview` 对章内**每一组**回答：在所有满足
+  签署的总次序里，它是否始终印同样内容？
+  - 确定 → `deterministic: true`，给出 `print`，可直接制版。
+  - 不确定 → 给出两组合法全章次序 `witnesses`，各自标明该组印什么。
+  用关系 DAG 的可达性判定，不枚举线性扩展；与暴力枚举在随机样例上一致。
+- **交印包**：`issue_handover` 固化当前章、组内容、生效关系与预审结果，
+  `handover_batches` 列已发批次，`reopen_handover` **无需数据库**即可复算。
+
+```bash
+python3 scripts/demo_proofing.py   # 真实库走完退校/更正/送印/旧包复核 + 三个边角
+python3 -m unittest tests.test_proofing tests.test_proofing_cli -v
+```
+
+CLI：`volume-names`、`create-chapter`、`add-group`、`submit-claim`、
+`retract-claim`、`correct-claims`、`correct-excerpt`、`prereview`、
+`issue-handover`、`reopen-handover`、`list-handovers`。
 
 ## 不做什么
 

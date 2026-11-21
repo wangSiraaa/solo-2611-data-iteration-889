@@ -1,0 +1,275 @@
+{
+  "format": "proof-handover/1",
+  "batch_id": "batch-worked-1",
+  "issued_at": "2026-11-21T01:18:25.248898+00:00",
+  "proof_revision": 10,
+  "catalog_revision": 1,
+  "chapter": {
+    "chapter_id": "ch",
+    "chapter_order": 0,
+    "title": "示例章"
+  },
+  "volume_names": {
+    "卷甲": {
+      "full_name": "卷甲全称",
+      "short_name": "卷甲"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "F",
+      "position": 0,
+      "excerpt_ids": [
+        "F"
+      ],
+      "usable": true,
+      "seq": [
+        [
+          "卷甲",
+          "p"
+        ]
+      ],
+      "pages": [
+        {
+          "volume_id": "卷甲",
+          "page_id": "p",
+          "section_id": "body",
+          "label": "3",
+          "active": true
+        }
+      ],
+      "volumes": [
+        "卷甲"
+      ]
+    },
+    {
+      "group_id": "Q",
+      "position": 1,
+      "excerpt_ids": [
+        "Q"
+      ],
+      "usable": true,
+      "seq": [
+        [
+          "卷甲",
+          "q"
+        ]
+      ],
+      "pages": [
+        {
+          "volume_id": "卷甲",
+          "page_id": "q",
+          "section_id": "appendix",
+          "label": "3",
+          "active": true
+        }
+      ],
+      "volumes": [
+        "卷甲"
+      ]
+    },
+    {
+      "group_id": "C",
+      "position": 2,
+      "excerpt_ids": [
+        "C"
+      ],
+      "usable": true,
+      "seq": [
+        [
+          "卷甲",
+          "p"
+        ]
+      ],
+      "pages": [
+        {
+          "volume_id": "卷甲",
+          "page_id": "p",
+          "section_id": "body",
+          "label": "3",
+          "active": true
+        }
+      ],
+      "volumes": [
+        "卷甲"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "ch:乙组:Q->C",
+      "from_group": "Q",
+      "to_group": "C",
+      "desk_id": "乙组",
+      "status": "active"
+    },
+    {
+      "claim_id": "ch:甲组:F->C",
+      "from_group": "F",
+      "to_group": "C",
+      "desk_id": "甲组",
+      "status": "active"
+    },
+    {
+      "claim_id": "ch:甲组:F->Q",
+      "from_group": "F",
+      "to_group": "Q",
+      "desk_id": "甲组",
+      "status": "active"
+    }
+  ],
+  "analysis": {
+    "chapter_id": "ch",
+    "chapter_order": 0,
+    "title": "示例章",
+    "claims": [
+      {
+        "claim_id": "ch:乙组:Q->C",
+        "from_group": "Q",
+        "to_group": "C",
+        "desk_id": "乙组"
+      },
+      {
+        "claim_id": "ch:甲组:F->C",
+        "from_group": "F",
+        "to_group": "C",
+        "desk_id": "甲组"
+      },
+      {
+        "claim_id": "ch:甲组:F->Q",
+        "from_group": "F",
+        "to_group": "Q",
+        "desk_id": "甲组"
+      }
+    ],
+    "groups": [
+      {
+        "group_id": "F",
+        "position": 0,
+        "usable": true,
+        "sequence": [
+          [
+            "卷甲",
+            "p"
+          ]
+        ],
+        "pages": [
+          {
+            "volume_id": "卷甲",
+            "page_id": "p",
+            "section_id": "body",
+            "label": "3",
+            "active": true
+          }
+        ],
+        "volumes": [
+          "卷甲"
+        ],
+        "forms": [
+          "full_name"
+        ],
+        "deterministic": true,
+        "can_plate": true,
+        "print": {
+          "form": "full_name",
+          "render": "卷甲全称：3",
+          "entries": [
+            {
+              "volume_id": "卷甲",
+              "page_id": "p",
+              "section_id": "body",
+              "label": "3",
+              "name": "卷甲全称",
+              "name_kind": "full"
+            }
+          ]
+        }
+      },
+      {
+        "group_id": "Q",
+        "position": 1,
+        "usable": true,
+        "sequence": [
+          [
+            "卷甲",
+            "q"
+          ]
+        ],
+        "pages": [
+          {
+            "volume_id": "卷甲",
+            "page_id": "q",
+            "section_id": "appendix",
+            "label": "3",
+            "active": true
+          }
+        ],
+        "volumes": [
+          "卷甲"
+        ],
+        "forms": [
+          "short_name"
+        ],
+        "deterministic": true,
+        "can_plate": true,
+        "print": {
+          "form": "short_name",
+          "render": "卷甲：3",
+          "entries": [
+            {
+              "volume_id": "卷甲",
+              "page_id": "q",
+              "section_id": "appendix",
+              "label": "3",
+              "name": "卷甲",
+              "name_kind": "short"
+            }
+          ]
+        }
+      },
+      {
+        "group_id": "C",
+        "position": 2,
+        "usable": true,
+        "sequence": [
+          [
+            "卷甲",
+            "p"
+          ]
+        ],
+        "pages": [
+          {
+            "volume_id": "卷甲",
+            "page_id": "p",
+            "section_id": "body",
+            "label": "3",
+            "active": true
+          }
+        ],
+        "volumes": [
+          "卷甲"
+        ],
+        "forms": [
+          "short_name"
+        ],
+        "deterministic": true,
+        "can_plate": true,
+        "print": {
+          "form": "short_name",
+          "render": "卷甲：3",
+          "entries": [
+            {
+              "volume_id": "卷甲",
+              "page_id": "p",
+              "section_id": "body",
+              "label": "3",
+              "name": "卷甲",
+              "name_kind": "short"
+            }
+          ]
+        }
+      }
+    ],
+    "all_deterministic": true
+  }
+}
